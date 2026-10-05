@@ -1,0 +1,975 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bhu-Aadhaar DPI - Interactive Admin Command Center</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            civic: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1E3A8A', // Civic Slate Blue
+              950: '#0f172a',
+            },
+            forest: {
+              600: '#059669',
+              700: '#047857', // Forest Green
+              800: '#065f46',
+            },
+            crimson: {
+              50: '#fef2f2',
+              100: '#fee2e2',
+              600: '#DC2626', // Crimson Red
+              700: '#b91c1c',
+            },
+            pearl: '#F8F9FA',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F8F9FA;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    /* Smooth transitions */
+    .view-transition {
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-[#F8F9FA] text-slate-800 antialiased min-h-screen flex">
+
+  <!-- ========================================== -->
+  <!-- FIXED LEFT SIDEBAR (Dark Theme - Slate 900) -->
+  <!-- ========================================== -->
+  <aside class="w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col justify-between h-screen sticky top-0 z-30 shadow-xl border-r border-slate-800">
+    <!-- Top Branding & Navigation -->
+    <div>
+      <!-- Brand Crest & Header -->
+      <div class="p-6 border-b border-slate-800/80 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-civic-900 border border-blue-400/30 flex items-center justify-center text-blue-200 shadow-md">
+          <i data-lucide="shield-check" class="w-6 h-6 text-blue-300"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-1.5">
+            Bhu-Aadhaar <span class="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30">DPI</span>
+          </h1>
+          <p class="text-xs text-slate-400 font-medium">Govt Land Informatics</p>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="px-4 py-6">
+        <div class="text-[11px] font-semibold text-slate-400 tracking-wider uppercase px-3 mb-3">
+          Cadastral Governance
+        </div>
+        <nav class="space-y-1.5" id="nav-container">
+          <!-- 1. Dashboard -->
+          <button id="nav-btn-dashboard" onclick="switchTab('dashboard')" class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 bg-civic-900 text-white shadow-sm shadow-blue-900/40 border border-blue-500/20">
+            <div class="flex items-center gap-3">
+              <i data-lucide="layout-dashboard" class="w-5 h-5 text-blue-300"></i>
+              <span>Dashboard</span>
+            </div>
+            <span class="w-2 h-2 rounded-full bg-blue-400 shadow-sm shadow-blue-400" id="indicator-dashboard"></span>
+          </button>
+
+          <!-- 2. Mutation Queue -->
+          <button id="nav-btn-mutation" onclick="switchTab('mutation')" class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all duration-150">
+            <div class="flex items-center gap-3">
+              <i data-lucide="file-text" class="w-5 h-5 text-slate-400"></i>
+              <span>Mutation Queue</span>
+            </div>
+            <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-crimson-600 text-white shadow-sm tabular-nums">42</span>
+          </button>
+
+          <!-- 3. Spatial Alerts -->
+          <button id="nav-btn-alerts" onclick="switchTab('alerts')" class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all duration-150">
+            <div class="flex items-center gap-3">
+              <i data-lucide="map-pin" class="w-5 h-5 text-slate-400"></i>
+              <span>Spatial Alerts</span>
+            </div>
+            <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-crimson-600 text-white shadow-sm tabular-nums">14</span>
+          </button>
+        </nav>
+
+        <!-- System Telemetry Badge -->
+        <div class="mt-8 mx-1 p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-xs font-semibold text-slate-200">NIC Node #428 Online</span>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            National Land Grid EPSG:4326 synchronization active (99.98% SLA).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Profile & Logout -->
+    <div class="p-4 border-t border-slate-800/80 bg-slate-900/90">
+      <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-800/70 transition-colors">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-blue-900 border border-blue-400/40 flex items-center justify-center font-bold text-xs text-blue-200 shadow-sm">
+            SS
+          </div>
+          <div class="truncate text-left">
+            <div class="text-xs font-bold text-white tracking-wide">Sub-Registrar S. Sharma</div>
+            <div class="text-[11px] text-slate-400 truncate">Tehsil Pataudi (HR-06)</div>
+          </div>
+        </div>
+        <button title="Secure Logout" onclick="alert('Logged out from NIC Digital Token Session')" class="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- MAIN WORKSPACE & TOP BAR -->
+  <!-- ========================================== -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto min-h-screen">
+    
+    <!-- Top Utility Header -->
+    <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-8 py-4 flex items-center justify-between shadow-sm">
+      <div class="flex items-center gap-4 flex-1 max-w-xl">
+        <div class="relative w-full">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input type="text" placeholder="Search ULPIN, Survey No, Khasra, or Deed Hash (Press '/' to focus)..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-civic-900/20 focus:border-civic-900 transition-all placeholder:text-slate-400 text-slate-800 font-medium">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Quick State Navigation Pills in Header -->
+        <div class="hidden md:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-medium mr-2">
+          <button onclick="switchTab('dashboard')" class="px-3 py-1.5 rounded-lg transition-all" id="header-btn-dashboard">Dashboard</button>
+          <button onclick="switchTab('mutation')" class="px-3 py-1.5 rounded-lg transition-all" id="header-btn-mutation">Queue (42)</button>
+          <button onclick="switchTab('alerts')" class="px-3 py-1.5 rounded-lg transition-all" id="header-btn-alerts">Alerts (14)</button>
+        </div>
+
+        <button class="relative p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors" title="Notifications">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+          <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-crimson-600"></span>
+        </button>
+
+        <div class="h-6 w-px bg-slate-200"></div>
+
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-forest-700/10 text-forest-700 text-xs font-bold border border-forest-700/20">
+          <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+          DSC Token Ready
+        </span>
+      </div>
+    </header>
+
+    <!-- CONTENT WRAPPER -->
+    <main class="p-8 max-w-7xl w-full mx-auto flex-1">
+
+      <!-- ========================================== -->
+      <!-- PAGE 1: DASHBOARD (activePage === 'dashboard') -->
+      <!-- ========================================== -->
+      <section id="page-dashboard" class="view-transition space-y-8">
+        <!-- Page Title & Subtitle -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-civic-900 uppercase tracking-wider mb-1">
+              <span>National Land Grid</span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span>Haryana State (HR-06)</span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span class="text-slate-500">Pataudi Sub-Division</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Revenue &amp; Mutation Command Center</h2>
+            <p class="text-sm text-slate-500 mt-0.5">Automated title integrity, real-time spatial collision telemetry &amp; priority queues.</p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button onclick="switchTab('mutation')" class="px-4 py-2 bg-civic-900 text-white rounded-xl text-sm font-semibold hover:bg-civic-800 transition-colors shadow-sm flex items-center gap-2">
+              <i data-lucide="file-check-2" class="w-4 h-4"></i>
+              Review Pending (42)
+            </button>
+          </div>
+        </div>
+
+        <!-- Top row: 4 KPI Cards (white bg, rounded-xl, shadow-sm, p-6) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <!-- KPI 1: Pending Transfers -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 transition-all hover:shadow-md cursor-pointer" onclick="switchTab('mutation')">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Transfers</span>
+              <div class="w-8 h-8 rounded-lg bg-blue-50 text-civic-900 flex items-center justify-center">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div class="text-3xl font-extrabold text-slate-900 tabular-nums">42</div>
+              <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +12% wk
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2 flex items-center gap-1">
+              <span class="font-medium text-slate-700">4.2 hrs</span> avg sub-registrar turnaround
+            </p>
+          </div>
+
+          <!-- KPI 2: Spatial Overlaps -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 transition-all hover:shadow-md cursor-pointer" onclick="switchTab('alerts')">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Spatial Overlaps</span>
+              <div class="w-8 h-8 rounded-lg bg-red-50 text-crimson-600 flex items-center justify-center">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div class="text-3xl font-extrabold text-crimson-600 tabular-nums">14</div>
+              <span class="text-xs font-bold text-crimson-700 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
+                Action Required
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">
+              AI drone orthomosaic boundary collisions flagged
+            </p>
+          </div>
+
+          <!-- KPI 3: Active Court Stays -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 transition-all hover:shadow-md">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Court Stays</span>
+              <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                <i data-lucide="gavel" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div class="text-3xl font-extrabold text-crimson-600 tabular-nums">8</div>
+              <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                NJDG Synced
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">
+              Injunctions active under Section 52 Transfer Act
+            </p>
+          </div>
+
+          <!-- KPI 4: API Verifications -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 transition-all hover:shadow-md">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">API Verifications</span>
+              <div class="w-8 h-8 rounded-lg bg-green-50 text-forest-700 flex items-center justify-center">
+                <i data-lucide="landmark" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div class="text-3xl font-extrabold text-forest-700 tabular-nums">1,204</div>
+              <span class="text-xs font-semibold text-forest-700 bg-forest-700/10 px-2 py-0.5 rounded-full border border-forest-700/20">
+                Live ULI Stream
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">
+              Cleared <span class="font-medium text-slate-700">₹348.6 Cr</span> encumbrance today
+            </p>
+          </div>
+        </div>
+
+        <!-- Middle row: Split view (gap-6) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Left (2/3 width): Live Spatial Monitor Card -->
+          <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <i data-lucide="map" class="w-5 h-5 text-civic-900"></i>
+                  Live Spatial Monitor
+                </h3>
+                <p class="text-xs text-slate-500">District Cadastral Grid Sub-Mesh #GUR-89 • EPSG:4326</p>
+              </div>
+
+              <!-- Cadastral Layer Switches -->
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                  Orthomosaic v4.2
+                </span>
+                <button onclick="switchTab('alerts')" class="text-xs font-semibold text-civic-900 hover:text-civic-700 underline flex items-center gap-1">
+                  View 14 Overlaps <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- GIS Map Placeholder Div -->
+            <div class="relative w-full h-80 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex flex-col items-center justify-center text-center p-6 group">
+              <!-- Background Grid Pattern -->
+              <div class="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#334155_1px,transparent_1px),linear-gradient(to_bottom,#334155_1px,transparent_1px)] bg-[size:28px_28px]"></div>
+
+              <!-- Simulated Geospatial Overlay -->
+              <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-80" viewBox="0 0 600 320">
+                <!-- Parcel 1: Green Verified -->
+                <polygon points="60,60 210,40 240,160 80,180" fill="rgba(4, 120, 87, 0.2)" stroke="#047857" stroke-width="2" stroke-dasharray="4"></polygon>
+                <text x="110" y="115" fill="#34d399" font-size="11" font-weight="bold">ULPIN 58J9 (Clear)</text>
+
+                <!-- Parcel 2: Red Overlapping -->
+                <polygon points="280,70 460,50 490,190 310,210" fill="rgba(220, 38, 38, 0.25)" stroke="#DC2626" stroke-width="2.5"></polygon>
+                
+                <!-- Parcel 3: Colliding Polygon -->
+                <polygon points="410,120 560,90 580,240 430,260" fill="rgba(220, 38, 38, 0.25)" stroke="#DC2626" stroke-width="2.5"></polygon>
+
+                <!-- Overlap Intersection Zone -->
+                <polygon points="410,120 460,50 490,190 430,260" fill="rgba(220, 38, 38, 0.55)" stroke="#ef4444" stroke-width="2"></polygon>
+                <circle cx="445" cy="155" r="14" fill="#DC2626" class="animate-ping opacity-75"></circle>
+                <circle cx="445" cy="155" r="7" fill="#ffffff"></circle>
+              </svg>
+
+              <!-- Central Overlay Callout -->
+              <div class="relative z-10 bg-slate-900/90 backdrop-blur-md px-5 py-3.5 rounded-xl border border-slate-700 shadow-xl max-w-sm">
+                <div class="flex items-center justify-center gap-2 text-crimson-600 font-bold text-xs uppercase tracking-wider mb-1">
+                  <i data-lucide="alert-octagon" class="w-4 h-4 text-red-500 animate-pulse"></i>
+                  Critical Collision Detected
+                </div>
+                <div class="text-sm font-semibold text-white">GIS Map Render Area</div>
+                <p class="text-xs text-slate-400 mt-1">
+                  Survey #142/3A overlaps #142/3B by 0.18 Ha (12.4% area delta). Auto-lock applied.
+                </p>
+                <div class="mt-3 flex items-center justify-center gap-2">
+                  <button onclick="switchTab('alerts')" class="px-3 py-1 bg-crimson-600 hover:bg-crimson-700 text-white rounded-lg text-xs font-semibold transition-colors">
+                    Inspect Collision Dossier
+                  </button>
+                </div>
+              </div>
+
+              <!-- Map Overlay Telemetry Footnotes -->
+              <div class="absolute bottom-3 left-4 text-[11px] text-slate-400 font-mono flex items-center gap-3 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                <span>Lat: 28.4595° N</span>
+                <span>Long: 77.0266° E</span>
+                <span class="text-emerald-400">C-DAC RTK ±2cm</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right (1/3 width): Recent Bank Verifications Card -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <i data-lucide="landmark" class="w-5 h-5 text-forest-700"></i>
+                  Recent Bank Verifications
+                </h3>
+                <span class="text-[11px] font-bold text-forest-700 bg-forest-700/10 px-2 py-0.5 rounded-full border border-forest-700/20">
+                  ULI API
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 mb-5">
+                Automated title clearance and lien queries from scheduled commercial lenders.
+              </p>
+
+              <!-- Vertical Timeline List of 3 Recent Approvals -->
+              <div class="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                
+                <!-- Approval 1 -->
+                <div class="relative">
+                  <span class="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full bg-forest-700 ring-4 ring-emerald-50"></span>
+                  <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="font-bold text-slate-900">State Bank of India</span>
+                    <span class="text-[11px] text-slate-400">4m ago</span>
+                  </div>
+                  <p class="text-xs text-slate-600 leading-snug">
+                    ULPIN <span class="font-mono font-semibold text-slate-800">58J9-2A41-9912</span> validated. Agri Term Loan <span class="font-semibold text-slate-900">₹24.5 Lakhs</span> sanctioned.
+                  </p>
+                  <span class="inline-block mt-1.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    Title Clear (ZKP Validated)
+                  </span>
+                </div>
+
+                <!-- Approval 2 -->
+                <div class="relative">
+                  <span class="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full bg-civic-900 ring-4 ring-blue-50"></span>
+                  <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="font-bold text-slate-900">HDFC Rural Credit</span>
+                    <span class="text-[11px] text-slate-400">18m ago</span>
+                  </div>
+                  <p class="text-xs text-slate-600 leading-snug">
+                    Lien Registered for ULPIN <span class="font-mono font-semibold text-slate-800">HR04-2024-8114</span>. Mortgage charge of <span class="font-semibold text-slate-900">₹1.20 Cr</span> applied.
+                  </p>
+                  <span class="inline-block mt-1.5 text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                    Charge Registered #42
+                  </span>
+                </div>
+
+                <!-- Approval 3 -->
+                <div class="relative">
+                  <span class="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full bg-forest-700 ring-4 ring-emerald-50"></span>
+                  <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="font-bold text-slate-900">Punjab National Bank</span>
+                    <span class="text-[11px] text-slate-400">35m ago</span>
+                  </div>
+                  <p class="text-xs text-slate-600 leading-snug">
+                    Encumbrance Search Query for Khasra <span class="font-mono font-semibold text-slate-800">#312/4</span>. 30-year non-encumbrance certificate issued.
+                  </p>
+                  <span class="inline-block mt-1.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    Non-Encumbered Verified
+                  </span>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-xs text-slate-500">RBI Public Tech Platform</span>
+              <a href="javascript:void(0)" onclick="alert('Viewing Complete ULI Banking Audit Ledger')" class="text-xs font-semibold text-civic-900 hover:underline">
+                Full Audit Trail →
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- PAGE 2: MUTATION QUEUE (activePage === 'mutation') -->
+      <!-- ========================================== -->
+      <section id="page-mutation" class="hidden view-transition space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-civic-900 uppercase tracking-wider mb-1">
+              <span>Registry Operations</span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span class="text-slate-500">Deed Mutation Desk</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Priority Mutation Queue</h2>
+            <p class="text-sm text-slate-500 mt-0.5">
+              Requires Sub-Registrar Digital Signature Certificate (DSC) e-Sign to permanently update state jamabandi.
+            </p>
+          </div>
+
+          <!-- Quick Filters & Batch Action -->
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-medium text-slate-500">
+              Showing <span class="font-bold text-slate-900" id="queue-count">4</span> of 42 cases
+            </span>
+            <button onclick="batchApprove()" class="px-4 py-2 bg-forest-700 hover:bg-forest-800 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2">
+              <i data-lucide="stamp" class="w-4 h-4"></i>
+              Batch e-Sign Verified
+            </button>
+          </div>
+        </div>
+
+        <!-- Notification Banner if action taken -->
+        <div id="action-banner" class="hidden p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between text-sm">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+            <span id="action-message" class="font-medium">Action executed successfully.</span>
+          </div>
+          <button onclick="document.getElementById('action-banner').classList.add('hidden')" class="text-emerald-700 hover:text-emerald-900">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Wide, Clean Data Table (white bg, rounded-xl, border) -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <th class="py-4 px-6">ULPIN / Parcel ID</th>
+                  <th class="py-4 px-6">Transfer Type</th>
+                  <th class="py-4 px-6">Area</th>
+                  <th class="py-4 px-6">Status</th>
+                  <th class="py-4 px-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-sm" id="mutation-table-body">
+                
+                <!-- Row 1 -->
+                <tr id="row-1" class="hover:bg-slate-50/60 transition-colors">
+                  <td class="py-4 px-6 font-mono font-semibold text-slate-900">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <span>58J9-2A41</span>
+                    </div>
+                    <span class="text-xs font-sans text-slate-400 font-normal">Bilaspur Kalan #142/3</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-civic-900 border border-blue-100">
+                      Sale Deed
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 font-medium text-slate-700 tabular-nums">
+                    2.10 Ha
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      Pending
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="approveMutation('row-1', '58J9-2A41')" class="px-3.5 py-1.5 bg-forest-700 hover:bg-forest-800 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        Approve (e-Sign)
+                      </button>
+                      <button onclick="rejectMutation('row-1', '58J9-2A41')" class="px-3.5 py-1.5 border border-red-600 text-red-600 hover:bg-red-50 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        Reject
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 2 -->
+                <tr id="row-2" class="hover:bg-slate-50/60 transition-colors">
+                  <td class="py-4 px-6 font-mono font-semibold text-slate-900">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <span>58J9-44C2</span>
+                    </div>
+                    <span class="text-xs font-sans text-slate-400 font-normal">Bhora Kalan #88/1</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-100">
+                      Succession / Fard
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 font-medium text-slate-700 tabular-nums">
+                    1.45 Ha
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      Pending
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="approveMutation('row-2', '58J9-44C2')" class="px-3.5 py-1.5 bg-forest-700 hover:bg-forest-800 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        Approve (e-Sign)
+                      </button>
+                      <button onclick="rejectMutation('row-2', '58J9-44C2')" class="px-3.5 py-1.5 border border-red-600 text-red-600 hover:bg-red-50 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        Reject
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 3 -->
+                <tr id="row-3" class="hover:bg-slate-50/60 transition-colors">
+                  <td class="py-4 px-6 font-mono font-semibold text-slate-900">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <span>58J9-31F7</span>
+                    </div>
+                    <span class="text-xs font-sans text-slate-400 font-normal">Pataudi Ward 4</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-100">
+                      Gift Deed
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 font-medium text-slate-700 tabular-nums">
+                    0.38 Ha
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      Pending
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="approveMutation('row-3', '58J9-31F7')" class="px-3.5 py-1.5 bg-forest-700 hover:bg-forest-800 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        Approve (e-Sign)
+                      </button>
+                      <button onclick="rejectMutation('row-3', '58J9-31F7')" class="px-3.5 py-1.5 border border-red-600 text-red-600 hover:bg-red-50 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        Reject
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 4 -->
+                <tr id="row-4" class="hover:bg-slate-50/60 transition-colors">
+                  <td class="py-4 px-6 font-mono font-semibold text-slate-900">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                      <span>58J9-77D0</span>
+                    </div>
+                    <span class="text-xs font-sans text-slate-400 font-normal">Manesar Sector 8</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                      Partition Deed
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 font-medium text-slate-700 tabular-nums">
+                    3.80 Ha
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      Pending
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <button onclick="approveMutation('row-4', '58J9-77D0')" class="px-3.5 py-1.5 bg-forest-700 hover:bg-forest-800 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        Approve (e-Sign)
+                      </button>
+                      <button onclick="rejectMutation('row-4', '58J9-77D0')" class="px-3.5 py-1.5 border border-red-600 text-red-600 hover:bg-red-50 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        Reject
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Footer Pagination -->
+          <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+            <span>Official Cadastral Ledger • National Informatics Centre Standard 3.4</span>
+            <div class="flex items-center gap-2">
+              <button class="px-2.5 py-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50" disabled="">Previous</button>
+              <span class="font-bold text-slate-800 px-1">1</span>
+              <button class="px-2.5 py-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50">Next</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- PAGE 3: SPATIAL ALERTS (activePage === 'alerts') -->
+      <!-- ========================================== -->
+      <section id="page-alerts" class="hidden view-transition space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-crimson-600 uppercase tracking-wider mb-1">
+              <span>Geodetic Intelligence</span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span class="text-slate-500">AI Collision Radar</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">AI Boundary Overlap Alerts</h2>
+            <p class="text-sm text-slate-500 mt-0.5">
+              Automated geospatial polygon intersections detected via high-resolution drone orthomosaics and DILRMP cadastral maps.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="px-3 py-1.5 rounded-xl bg-red-100 text-crimson-600 font-bold text-xs border border-red-200 flex items-center gap-1.5">
+              <i data-lucide="alert-circle" class="w-4 h-4"></i>
+              14 Critical Collisions Enforced
+            </span>
+          </div>
+        </div>
+
+        <!-- Grid of Alert Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="alerts-grid">
+          
+          <!-- Alert Card 1 (Requested exact pattern) -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-crimson-600 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-3">
+                <span class="font-mono font-bold text-crimson-600 bg-red-50 px-2 py-0.5 rounded border border-red-100">
+                  COLLISION #AL-9921
+                </span>
+                <span class="text-slate-400">Pataudi Tehsil</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-900 leading-snug mb-2">
+                High Overlap Detected: ULPIN 44K1 intersects with ULPIN 99B2 by 12%.
+              </h4>
+              <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                Drone survey comparison flags boundary protrusion along eastern Khasra boundary #219/1. Deed registrations automatically locked under Sec 54.
+              </p>
+              
+              <!-- Key Data Badges -->
+              <div class="space-y-1.5 bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs mb-5 font-mono">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Overlap Area:</span>
+                  <span class="font-semibold text-slate-800">0.24 Hectares</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">AI Confidence:</span>
+                  <span class="font-semibold text-emerald-600">99.4% (C-DAC RTK)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Button: "Issue Legal Notice" (bg-slate-800 text-white) -->
+            <button onclick="issueNotice('COLLISION #AL-9921', 'ULPIN 44K1 &amp; 99B2')" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              Issue Legal Notice
+            </button>
+          </div>
+
+          <!-- Alert Card 2 -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-crimson-600 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-3">
+                <span class="font-mono font-bold text-crimson-600 bg-red-50 px-2 py-0.5 rounded border border-red-100">
+                  COLLISION #AL-9922
+                </span>
+                <span class="text-slate-400">Bilaspur Kalan</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-900 leading-snug mb-2">
+                High Overlap Detected: ULPIN 58J9 intersects with ULPIN 88A4 by 14.2%.
+              </h4>
+              <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                Encroachment on Common Pasture (Gram Sabha) reserve boundary. Automated summon issued to Sub-Divisional Kanungo.
+              </p>
+              
+              <div class="space-y-1.5 bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs mb-5 font-mono">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Overlap Area:</span>
+                  <span class="font-semibold text-slate-800">0.31 Hectares</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">AI Confidence:</span>
+                  <span class="font-semibold text-emerald-600">98.8% (NIC Mesh)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Button: "Issue Legal Notice" (bg-slate-800 text-white) -->
+            <button onclick="issueNotice('COLLISION #AL-9922', 'ULPIN 58J9 &amp; 88A4')" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              Issue Legal Notice
+            </button>
+          </div>
+
+          <!-- Alert Card 3 -->
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-crimson-600 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-3">
+                <span class="font-mono font-bold text-crimson-600 bg-red-50 px-2 py-0.5 rounded border border-red-100">
+                  COLLISION #AL-9923
+                </span>
+                <span class="text-slate-400">Manesar Sector 8</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-900 leading-snug mb-2">
+                High Overlap Detected: ULPIN 71M3 intersects with ULPIN 33F9 by 9.8%.
+              </h4>
+              <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                Sub-division boundary mismatch post highway widening project NH-48. Cadastral re-triangulation scheduled.
+              </p>
+              
+              <div class="space-y-1.5 bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs mb-5 font-mono">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Overlap Area:</span>
+                  <span class="font-semibold text-slate-800">0.15 Hectares</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">AI Confidence:</span>
+                  <span class="font-semibold text-emerald-600">97.2% (Ortho v4)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Button: "Issue Legal Notice" (bg-slate-800 text-white) -->
+            <button onclick="issueNotice('COLLISION #AL-9923', 'ULPIN 71M3 &amp; 33F9')" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              Issue Legal Notice
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Standard Compliance Footer -->
+    <footer class="mt-auto border-t border-slate-200 bg-white px-8 py-3.5 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-4">
+        <span>Bhu-Aadhaar DPI • Digital India Land Records Modernization Programme (DILRMP)</span>
+        <span class="hidden md:inline">•</span>
+        <span class="hidden md:inline">NIC Security Level 4 Verified</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1 text-slate-600">
+          <i data-lucide="lock" class="w-3.5 h-3.5 text-forest-700"></i> ISO 27001 Cryptographic Ledger
+        </span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Client-side Interactive State Controller simulating React useState -->
+  <script>
+    // Initial State: activePage = 'dashboard'
+    let activePage = 'dashboard';
+
+    function switchTab(targetPage) {
+      activePage = targetPage;
+
+      // 1. Hide all pages
+      document.getElementById('page-dashboard').classList.add('hidden');
+      document.getElementById('page-mutation').classList.add('hidden');
+      document.getElementById('page-alerts').classList.add('hidden');
+
+      // 2. Show active page
+      const activeEl = document.getElementById(`page-${targetPage}`);
+      if (activeEl) {
+        activeEl.classList.remove('hidden');
+      }
+
+      // 3. Update Left Sidebar Navigation styling
+      const navButtons = {
+        'dashboard': document.getElementById('nav-btn-dashboard'),
+        'mutation': document.getElementById('nav-btn-mutation'),
+        'alerts': document.getElementById('nav-btn-alerts'),
+      };
+
+      Object.keys(navButtons).forEach(key => {
+        const btn = navButtons[key];
+        if (key === targetPage) {
+          btn.className = "w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 bg-civic-900 text-white shadow-sm shadow-blue-900/40 border border-blue-500/20";
+        } else {
+          btn.className = "w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all duration-150";
+        }
+      });
+
+      // 4. Update Header fast buttons
+      ['dashboard', 'mutation', 'alerts'].forEach(key => {
+        const hBtn = document.getElementById(`header-btn-${key}`);
+        if (hBtn) {
+          if (key === targetPage) {
+            hBtn.className = "px-3 py-1.5 rounded-lg bg-white text-civic-900 shadow-sm font-bold";
+          } else {
+            hBtn.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900";
+          }
+        }
+      });
+
+      // Scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Refresh icons if dynamic DOM elements render
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    }
+
+    // Row Actions in Mutation Queue
+    function approveMutation(rowId, ulpin) {
+      const row = document.getElementById(rowId);
+      if (row) {
+        row.classList.add('bg-emerald-50/50');
+        const actionsTd = row.querySelector('td:last-child');
+        actionsTd.innerHTML = `
+          <div class="flex items-center justify-end gap-1.5 text-forest-700 font-bold text-xs">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            Approved & e-Signed
+          </div>
+        `;
+        const statusTd = row.querySelector('td:nth-child(4)');
+        statusTd.innerHTML = `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+            e-Signed
+          </span>
+        `;
+        showBanner(`Successfully applied Sub-Registrar digital e-Sign token for ULPIN ${ulpin}. Jamabandi record updated.`);
+        lucide.createIcons();
+      }
+    }
+
+    function rejectMutation(rowId, ulpin) {
+      const row = document.getElementById(rowId);
+      if (row) {
+        row.classList.add('bg-red-50/40');
+        const actionsTd = row.querySelector('td:last-child');
+        actionsTd.innerHTML = `
+          <div class="flex items-center justify-end gap-1.5 text-crimson-600 font-bold text-xs">
+            <i data-lucide="x-circle" class="w-4 h-4"></i>
+            Rejected / Returned
+          </div>
+        `;
+        const statusTd = row.querySelector('td:nth-child(4)');
+        statusTd.innerHTML = `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-crimson-600 border border-red-200">
+            Rejected
+          </span>
+        `;
+        showBanner(`Mutation transfer for ULPIN ${ulpin} was rejected and returned to the applicant with deficiency memo.`);
+        lucide.createIcons();
+      }
+    }
+
+    function batchApprove() {
+      ['row-1', 'row-2', 'row-3', 'row-4'].forEach((id, idx) => {
+        const u = ['58J9-2A41', '58J9-44C2', '58J9-31F7', '58J9-77D0'][idx];
+        approveMutation(id, u);
+      });
+      showBanner(`Batch digital signature applied to all verified deeds in the active queue.`);
+    }
+
+    function issueNotice(collisionId, ulpins) {
+      alert(`Legal Notice issued for ${collisionId} (${ulpins}) under Section 54 of the Punjab Land Revenue Act. Electronic notice dispatched to Tehsil Registry & Citizen DigiLocker.`);
+    }
+
+    function showBanner(msg) {
+      const banner = document.getElementById('action-banner');
+      const text = document.getElementById('action-message');
+      if (banner && text) {
+        text.innerText = msg;
+        banner.classList.remove('hidden');
+      }
+    }
+
+    // Initialize Lucide Icons on load
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      switchTab('dashboard');
+    });
+    // In case DOM already loaded
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      lucide.createIcons();
+      switchTab('dashboard');
+    }
+  </script>
+
+
+</body></html>
